@@ -1,0 +1,6 @@
+{
+  "main": "file_server.js",
+  "dependencies": {
+    "mime": "^2.2.0"
+  }
+}
