@@ -49,46 +49,49 @@ class Editor {
 class FilePane {
 
     // by now
-    constructor(files, dispatch) {
-        this.files = []
-        this.dom = elt('div', { id: 'file-pane' },
-            ...files.map(
-                file => elt('button', {
-                    className: 'file',
-                    // animation ...
-                    onclick: () => {
-                        dispatch({ selFile: file })
-                    }
-                }, file)
-            )
-        )
+    constructor(dispatch) {
+        this.dispatch = dispatch
+        this.dom = elt('div', { id: 'file-pane' })
     }
 
-    syncState() { }
+    syncState({ files }) {
+        if (this.files == files) return
+        this.dom.textContent = ''
+        this.dom.append(...files.map(
+            file => elt('button',
+                {
+                    className: 'file',
+                    onclick: () => {
+                        this.dispatch({ selFile: file })
+                    }
+                }, file
+            )
+        ))
+        this.files = files
+    }
 
 }
 
 
-class MargDisplay {
-    constructor(parent, files, state) {
-        let components = [new Editor(files), new InfoPane()]
-        let filePane = new FilePane(files, update_state)
-
-        function update_state(diff) {
-            state = Object.assign(state, diff)
-            components.forEach(e => e.syncState(state))
-        }
-
+class MargApp {
+    constructor(init_state, dispatch) {
+        let filePane = new FilePane(dispatch)
+        let editcomp = [new Editor(), new InfoPane()]
+        this.components = [filePane, ...editcomp]
 
         this.dom = elt(
             'div', { id: 'main-pane' },
             filePane.dom,
             elt('div', { id: 'editor-pane' },
-                ...components.map(c => c.dom)
+                ...editcomp.map(c => c.dom)
             )
         )
-        parent.appendChild(this.dom)
-        update_state({ selFile: files[0] })
+        this.syncState(init_state)
+    }
+
+    syncState(state) {
+        for (let c of this.components)
+            c.syncState(state)
     }
 }
 
@@ -97,9 +100,16 @@ async function getFiles() {
     return (await res.text()).split('\n')
 }
 
-async function runApp() {
-    let files = await getFiles()
-    new MargDisplay(document.body, files, {})
+function runApp() {
+    getFiles().then(files => {
+        let state = { files, selFile: files[0] }, app;
+        app = new MargApp(state, function (action) {
+            state = Object.assign(state, action)
+            app.syncState(state)
+        })
+        document.body.appendChild(app.dom)
+    })
+
 }
 
 runApp()
