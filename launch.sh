@@ -2,6 +2,7 @@
 
 START_DIR="website"
 SRC_DIR='src'
+
 echo "use the following http://localhost:8000/index.html to have access to the website"
 if [[ -e $START_DIR ]]; then
 	rm -r $START_DIR/*

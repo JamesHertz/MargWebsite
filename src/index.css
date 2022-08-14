@@ -1,0 +1,16 @@
+body{
+    display: grid;
+    place-items: center;
+    text-align: center;
+    background-color: aqua;
+}
+
+#main-frame{
+    display: grid;
+    grid-template-columns: auto auto;
+    width: 70vw;
+}
+
+.file:hover {
+    background-color: blue;
+}
