@@ -37,14 +37,23 @@ class Editor {
     syncState({ selFile }) {
         if (this.selFile === selFile) return
         fetchOK(`/${selFile}`).then(
-            res => res.text()
-        ).then(txt =>
-            this.dom.textContent = txt
+            async res => {
+                this.dom.textContent = await res.text()
+                this.selFile = selFile
+            }
         ).catch(console.log)
-        this.selFile = selFile
     }
 }
 
+
+function renderFile(file, dispatch) {
+    return elt('button',
+        {
+            className: 'file',
+            onclick: () => dispatch({ selFile: file })
+        }, file
+    )
+}
 
 class FilePane {
 
@@ -58,14 +67,7 @@ class FilePane {
         if (this.files == files) return
         this.dom.textContent = ''
         this.dom.append(...files.map(
-            file => elt('button',
-                {
-                    className: 'file',
-                    onclick: () => {
-                        this.dispatch({ selFile: file })
-                    }
-                }, file
-            )
+            file => renderFile(file, this.dispatch)
         ))
         this.files = files
     }
