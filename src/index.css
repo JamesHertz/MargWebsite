@@ -17,18 +17,16 @@ body{
     background-color: #000*/
 }
 
-#editor-pane{
-    /*later on*/
-}
-
-
 #editor{
     resize: none;
     width: 99%;
     height: 200px;
 }
 
-#editor-info{
+#edit-tools{
+    display: grid;
+    grid-template-columns: 70% auto auto;
+    gap: 2px;
     background-color: white;
 }
 
@@ -50,7 +48,7 @@ body{
 .file.selected{
     color: white;
     border: 2px solid white;
-    background-color: #226865 
+    background-color: #226865 /*sugestion green*/ 
 }
 
 .file:hover {
