@@ -39,6 +39,7 @@ class Editor {
         fetchOK(`/${selected}`).then(
             async res => {
                 this.dom.textContent = await res.text()
+                this.dom.scrollTop = 0 // detail
                 this.selected = selected 
             }
         ).catch(console.log)
