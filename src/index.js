@@ -38,7 +38,7 @@ class Editor {
         if (this.selected === selected) return
         fetchOK(`/${selected}`).then(
             async res => {
-                this.dom.textContent = await res.text()
+                this.dom.value = await res.text()
                 this.dom.scrollTop = 0 // detail
                 this.selected = selected 
             }
