@@ -24,7 +24,7 @@ class InfoPane {
     }
 
     syncState(state) {
-        this.file.textContent = state.selFile
+        this.file.textContent = state.selected
     }
 }
 
@@ -34,12 +34,12 @@ class Editor {
         this.dom = elt('textarea', { id: 'editor' })
     }
 
-    syncState({ selFile }) {
-        if (this.selFile === selFile) return
-        fetchOK(`/${selFile}`).then(
+    syncState({ selected }) {
+        if (this.selected === selected) return
+        fetchOK(`/${selected}`).then(
             async res => {
                 this.dom.textContent = await res.text()
-                this.selFile = selFile
+                this.selected = selected 
             }
         ).catch(console.log)
     }
@@ -47,10 +47,10 @@ class Editor {
 
 
 function renderFile(file, dispatch) {
-    return elt('button',
+    return elt('div',
         {
             className: 'file',
-            onclick: () => dispatch({ selFile: file })
+            onclick: () => dispatch({ selected: file })
         }, file
     )
 }
@@ -61,15 +61,28 @@ class FilePane {
     constructor(dispatch) {
         this.dispatch = dispatch
         this.dom = elt('div', { id: 'file-pane' })
+        this.fileComps = Object.create(null)
     }
 
-    syncState({ files }) {
-        if (this.files == files) return
-        this.dom.textContent = ''
-        this.dom.append(...files.map(
-            file => renderFile(file, this.dispatch)
-        ))
-        this.files = files
+    syncState({files, selected}){
+        if (this.files != files) {
+            this.dom.textContent = ''
+            this.dom.append(...files.map(
+                file => {
+                    let comp = renderFile(file, this.dispatch)
+                    this.fileComps[file] = comp
+                    return comp
+                }
+            ))
+            this.files = files
+        }
+
+        if(this.selected != selected){
+            if(this.selected)
+                this.fileComps[this.selected].classList.remove('selected')
+            this.fileComps[selected].classList.add('selected')
+            this.selected = selected
+        }
     }
 
 }
@@ -104,7 +117,7 @@ async function getFiles() {
 
 function runApp() {
     getFiles().then(files => {
-        let state = { files, selFile: files[0] }, app;
+        let state = { files, selected: files[0] }, app;
         app = new MargApp(state, function (action) {
             state = Object.assign(state, action)
             app.syncState(state)

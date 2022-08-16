@@ -9,18 +9,22 @@ body{
 #main-pane{
     position: relative;
     display: grid;
-    grid-template-columns: auto auto;
+    grid-template-columns: 29% 70%;
     width: 80vw;
     font-size: 20px;
+    gap: 1%;
+    /*
+    background-color: #000*/
 }
 
 #editor-pane{
-    width: 50vw; 
+    /*later on*/
 }
+
 
 #editor{
     resize: none;
-    width: 100%; 
+    width: 99%;
     height: 200px;
 }
 
@@ -43,8 +47,10 @@ body{
     border: none;
 }
 
-.file:active {
+.file.selected{
     color: white;
+    border: 2px solid white;
+    background-color: rgb(34, 104, 101)
 }
 
 .file:hover {
