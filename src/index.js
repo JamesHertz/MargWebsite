@@ -13,15 +13,15 @@ function fakeHandleAction(state, action) {
     switch (action.type) {
         case 'delete': {
             delete files[state.selectedFile]
-            let ff = Object.keys(files)  
-            return Object.assign(state, {selectedFile: ff[0]})
-       }
+            let ff = Object.keys(files)
+            return Object.assign(state, { selectedFile: ff[0] })
+        }
         case 'save': {
             let { selectedFile, fileContent } = state
             files[selectedFile] = fileContent
         }
-        break;
-   }
+            break;
+    }
 
 
     return state
@@ -77,12 +77,14 @@ function renderFile(file, dispatch, { selectedFile }) {
     return elt('div',
         {
             className: `file${(selectedFile == file ? ' selected' : '')}`,
-            onclick: () =>{
-                dispatch({ selectedFile: file, fileContent: files[file]})
+            onclick: () => {
+                dispatch({ selectedFile: file, fileContent: files[file] })
             }
         }, file
     )
 }
+
+
 
 class FilePane {
 
@@ -109,8 +111,8 @@ class FilePane {
             if (this.selectedFile)
                 this.fileComps[this.selectedFile].classList.remove('selected')
             this.fileComps[selectedFile].classList.add('selected')
-            this.selectedFile = selectedFile
         }
+        this.selectedFile = selectedFile
     }
 
 }
@@ -127,11 +129,11 @@ class Editor {
         this.selectedFile = ''
     }
 
-    syncState({ selectedFile, fileContent}) {
+    syncState({ selectedFile, fileContent }) {
         if (!selectedFile || this.selectedFile === selectedFile) return
 
         // think about this later
-        if(selectedFile){
+        if (selectedFile) {
             this.dom.value = fileContent
             this.dom.scrollTop = 0 // detail
             this.selectedFile = selectedFile
@@ -192,6 +194,26 @@ class Save {
 
 }
 
+function renderNewFileButton(dispatch){
+    let dom = elt(
+        'button',
+        {
+            id: 'new-btn',
+            onclick: ()=> {
+                let file_name = prompt('fileName: ', '')
+                if(file_name){
+                    // decide what to do later
+                    files[file_name] = ''
+                    dispatch({selectedFile: file_name, fileContent: 'your text here'})
+                }else
+                    alert('invalid name')
+
+            }},
+        'new file'
+    )
+
+    return dom
+} 
 class MargApp {
     constructor(dispatch) {
         let filePane = new FilePane(dispatch)
@@ -202,7 +224,13 @@ class MargApp {
 
         this.dom = elt(
             'div', { id: 'main-pane' },
-            filePane.dom,
+            elt('div',
+                {
+                    id: 'left-pane'
+                },
+                filePane.dom,
+                renderNewFileButton(dispatch)
+            ),
             elt('div', { id: 'editor-pane' },
                 editor.dom,
                 elt('div',
@@ -227,7 +255,6 @@ class MargApp {
 }
 
 async function getFiles() {
-    console.log(Object.keys(files))
     return Object.keys(files)
 }
 
@@ -257,12 +284,13 @@ function runApp() {
     setInterval(async () => {
         let localFiles = state.files
         let serverFiles = await getFiles()
-        console.log({localFiles, serverFiles})
         if (!localFiles) {
-            let selectedFile = serverFiles[0] 
-            update({ files: serverFiles,
-                fileContent: files[selectedFile], 
-                selectedFile}) // What if no file found?
+            let selectedFile = serverFiles[0]
+            update({
+                files: serverFiles,
+                fileContent: files[selectedFile],
+                selectedFile
+            }) // What if no file found?
         } else {
             if (JSON.stringify(localFiles) != JSON.stringify(serverFiles))
                 update({ /*type:'update',*/ files: serverFiles })
