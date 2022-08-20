@@ -13,6 +13,8 @@ function fakeHandleAction(state, action) {
     switch (action.type) {
         case 'delete': {
             delete files[state.selectedFile]
+            let ff = Object.keys(files)  
+            return Object.assign(state, {selectedFile: ff[0]})
        }
         case 'save': {
             let { selectedFile, fileContent } = state
@@ -128,6 +130,7 @@ class Editor {
     syncState({ selectedFile, fileContent}) {
         if (!selectedFile || this.selectedFile === selectedFile) return
 
+        // think about this later
         if(selectedFile){
             this.dom.value = fileContent
             this.dom.scrollTop = 0 // detail
@@ -224,6 +227,7 @@ class MargApp {
 }
 
 async function getFiles() {
+    console.log(Object.keys(files))
     return Object.keys(files)
 }
 
@@ -245,7 +249,7 @@ async function pollDir(get_state, update_state) {
 function runApp() {
     let state = {}, app;
     function update(action) {
-        state = handleAction(state, action)
+        state = fakeHandleAction(state, action)
         app.syncState(state)
     }
     app = new MargApp(update)
@@ -253,8 +257,12 @@ function runApp() {
     setInterval(async () => {
         let localFiles = state.files
         let serverFiles = await getFiles()
+        console.log({localFiles, serverFiles})
         if (!localFiles) {
-            update({ files: serverFiles, selectedFile: serverFiles[0] })
+            let selectedFile = serverFiles[0] 
+            update({ files: serverFiles,
+                fileContent: files[selectedFile], 
+                selectedFile}) // What if no file found?
         } else {
             if (JSON.stringify(localFiles) != JSON.stringify(serverFiles))
                 update({ /*type:'update',*/ files: serverFiles })
