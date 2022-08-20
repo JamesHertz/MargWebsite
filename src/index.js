@@ -1,3 +1,30 @@
+const files = {
+    banana: 'I am a fruit',
+    car: 'I am an engineer marvel',
+    james: 'I wanna cry',
+    crazyFile: 'Say something',
+    anotherFile: 'turururu'
+}
+
+
+function fakeHandleAction(state, action) {
+
+    if (!action.type) return Object.assign(state, action)
+    switch (action.type) {
+        case 'delete': {
+            delete files[state.selectedFile]
+       }
+        case 'save': {
+            let { selectedFile, fileContent } = state
+            files[selectedFile] = fileContent
+        }
+        break;
+   }
+
+
+    return state
+}
+
 function handleAction(state, action) {
     if (!action.type) return Object.assign(state, action)
     switch (action.type) {
@@ -13,7 +40,7 @@ function handleAction(state, action) {
                 body: fileContent, method: 'PUT'
             }).catch(console.log)
         }
-        break;
+            break;
         /*
         case 'update':{
             let {selectedFile} = state
@@ -42,12 +69,15 @@ function elt(type, props, ...children) {
     return dom;
 }
 
+// by now
+// some problems. change this later
 function renderFile(file, dispatch, { selectedFile }) {
     return elt('div',
         {
             className: `file${(selectedFile == file ? ' selected' : '')}`,
-            onclick: () =>
-                dispatch({ selectedFile: file })
+            onclick: () =>{
+                dispatch({ selectedFile: file, fileContent: files[file]})
+            }
         }, file
     )
 }
@@ -62,7 +92,7 @@ class FilePane {
     }
 
     syncState(state) {
-        let {selectedFile, files} = state
+        let { selectedFile, files } = state
         if (this.files != files) {
             this.dom.textContent = ''
             this.dom.append(...files.map(
@@ -95,8 +125,15 @@ class Editor {
         this.selectedFile = ''
     }
 
-    syncState({ selectedFile }) {
+    syncState({ selectedFile, fileContent}) {
         if (!selectedFile || this.selectedFile === selectedFile) return
+
+        if(selectedFile){
+            this.dom.value = fileContent
+            this.dom.scrollTop = 0 // detail
+            this.selectedFile = selectedFile
+        }
+        /*
         fetchOK(`/${selectedFile}`).then(
             async res => {
                 let fileContent = await res.text()
@@ -106,6 +143,7 @@ class Editor {
                 this.dispatch({ fileContent })
             }
         ).catch(console.log)
+        */
     }
 }
 
@@ -120,7 +158,7 @@ class InfoPane {
         this.dom.textContent = state.selectedFile
     }
 }
-class Delete{
+class Delete {
     constructor(dispatch) {
         this.dom = elt(
             'button',
@@ -132,7 +170,7 @@ class Delete{
 
         )
     }
-    syncState(){}
+    syncState() { }
 
 }
 
@@ -147,7 +185,7 @@ class Save {
             'save'
         )
     }
-    syncState(){}
+    syncState() { }
 
 }
 
@@ -186,11 +224,11 @@ class MargApp {
 }
 
 async function getFiles() {
-    let res = await fetchOK('/')
-    return (await res.text()).split('\n')
+    return Object.keys(files)
 }
 
 
+// change this later
 async function pollDir(get_state, update_state) {
     setInterval(async () => {
         let localFiles = get_state().files
@@ -211,7 +249,17 @@ function runApp() {
         app.syncState(state)
     }
     app = new MargApp(update)
-    pollDir(() => state, update)
+    // pollDir(() => state, update)
+    setInterval(async () => {
+        let localFiles = state.files
+        let serverFiles = await getFiles()
+        if (!localFiles) {
+            update({ files: serverFiles, selectedFile: serverFiles[0] })
+        } else {
+            if (JSON.stringify(localFiles) != JSON.stringify(serverFiles))
+                update({ /*type:'update',*/ files: serverFiles })
+        }
+    }, 500)
     document.body.appendChild(app.dom)
 
 }
