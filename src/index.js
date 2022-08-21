@@ -194,26 +194,27 @@ class Save {
 
 }
 
-function renderNewFileButton(dispatch){
+function renderNewFileButton(dispatch) {
     let dom = elt(
         'button',
         {
-            id: 'new-btn',
-            onclick: ()=> {
+            id: 'new-btn',// no need by now :)
+            onclick: () => {
                 let file_name = prompt('fileName: ', '')
-                if(file_name){
+                if (file_name) {
                     // decide what to do later
                     files[file_name] = ''
-                    dispatch({selectedFile: file_name, fileContent: 'your text here'})
-                }else
+                    dispatch({ selectedFile: file_name, fileContent: 'your text here' })
+                } else
                     alert('invalid name')
 
-            }},
+            }
+        },
         'new file'
     )
 
     return dom
-} 
+}
 class MargApp {
     constructor(dispatch) {
         let filePane = new FilePane(dispatch)
@@ -224,26 +225,20 @@ class MargApp {
 
         this.dom = elt(
             'div', { id: 'main-pane' },
-            elt('div',
-                {
-                    id: 'left-pane'
-                },
-                filePane.dom,
-                renderNewFileButton(dispatch)
-            ),
-            elt('div', { id: 'editor-pane' },
-                editor.dom,
-                elt('div',
-                    { id: 'edit-tools' },
-                    ...editTools.map(
-                        builder => {
-                            let tool = new builder(dispatch)
-                            this.components.push(tool)
-                            return tool.dom
-                        }
-                    )
 
+            filePane.dom,
+            editor.dom,
+            renderNewFileButton(dispatch),
+            elt('div',
+                { id: 'edit-tools' },
+                ...editTools.map(
+                    builder => {
+                        let tool = new builder(dispatch)
+                        this.components.push(tool)
+                        return tool.dom
+                    }
                 )
+
             )
         )
     }
