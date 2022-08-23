@@ -20,11 +20,6 @@ function fakeHandleAction(state, action) {
 
             return Object.assign(state, { fileContent, selectedFile, files: action.files })
         }
-        case 'new':{
-            // do stuffs
-
-        }
-        break;
         case 'delete':
             delete files[state.selectedFile]
             break;
@@ -258,7 +253,9 @@ function renderNewFileButton(dispatch) {
                 if (file_name) {
                     // decide what to do later
                     files[file_name] = ''
-                    dispatch({ type: 'new', selectedFile: file_name, fileContent: 'your text here' })
+                    getFiles().then(files =>
+                        dispatch({ files, selectedFile: file_name, fileContent: 'your text here' })
+                    )
                 } else
                     alert('invalid name')
 
