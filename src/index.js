@@ -18,8 +18,7 @@ function fakeHandleAction(state, action) {
                 fileContent = selectedFile ? files[selectedFile] : '' 
             }
 
-
-            return Object.assign(state, { selectedFile, files: action.files })
+            return Object.assign(state, { fileContent, selectedFile, files: action.files })
         }
         case 'delete':
             delete files[state.selectedFile]
