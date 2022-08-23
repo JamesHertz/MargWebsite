@@ -152,7 +152,6 @@ class Editor {
         })
         this.dom = dom
         this.dispatch = dispatch
-        this.selectedFile = ''
     }
 
     syncState({ selectedFile, fileContent }) {
