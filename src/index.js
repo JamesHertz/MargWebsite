@@ -1,22 +1,31 @@
-const files = {
+const files = {} /* {
     banana: 'I am a fruit.\nAnd I have to live with it :(',
     car: 'I am an engineer marvel.\nEveryone likes me and that leaves happy',
     james: 'I wanna cry!\nI have been working on this project for weeks now',
     crazyFile: 'Say something. I am a crazy file akkakakkakakakk',
     anotherFile: 'turururururururrururr'
-}
+}*/
 
 
 function fakeHandleAction(state, action) {
 
     if (!action.type) return Object.assign(state, action)
     switch (action.type) {
-        case 'delete': {
-            delete files[state.selectedFile]
-            let ff = Object.keys(files)
-            return Object.assign(state, { selectedFile: ff[0] })
+        case 'update': {
+            let { selectedFile, fileContent } = state
+            if (!action.files.some(f => f === selectedFile)) {
+                selectedFile = action.files[0]
+                fileContent = selectedFile ? files[selectedFile] : '' 
+            }
+
+
+            return Object.assign(state, { selectedFile, files: action.files })
         }
+        case 'delete':
+            delete files[state.selectedFile]
+            break;
         case 'save': {
+            console.log('saving.')
             let { selectedFile, fileContent } = state
             files[selectedFile] = fileContent
         }
@@ -94,24 +103,43 @@ class FilePane {
         this.fileComps = Object.create(null)
     }
 
+    handleSwitchFile(newFile) {
+        if (this.selFile)
+            this.fileComps[this.selFile].classList.remove('selected')
+        this.fileComps[newFile].classList.add('selected')
+        //this.selFile = newFile
+    }
+
+    renderFiles(files, state) {
+        this.dom.textContent = ''
+
+        let fileList = files.map(
+            file => {
+                let comp = renderFile(file, this.dispatch, state)
+                this.fileComps[file] = comp
+                return comp
+            }
+        )
+        if (!fileList.length)
+            fileList.push(elt('strong',
+                { style: `color: white` },
+                'no files'
+            ))
+
+        this.dom.append(...fileList)
+        this.files = files
+    }
+
     syncState(state) {
         let { selectedFile, files } = state
-        if (this.files != files) {
-            this.dom.textContent = ''
-            this.dom.append(...files.map(
-                file => {
-                    let comp = renderFile(file, this.dispatch, state)
-                    this.fileComps[file] = comp
-                    return comp
-                }
-            ))
-            this.files = files
-        } else if (this.selectedFile != selectedFile) {
-            if (this.selectedFile)
-                this.fileComps[this.selectedFile].classList.remove('selected')
-            this.fileComps[selectedFile].classList.add('selected')
-        }
-        this.selectedFile = selectedFile
+
+        //console.log({selectedFile, old: this.selFile, files: this.files})
+        if (this.files != files)
+            this.renderFiles(files, state)
+        else if (this.selFile != selectedFile)
+            this.handleSwitchFile(selectedFile)
+
+        this.selFile = selectedFile
     }
 
 }
@@ -129,14 +157,19 @@ class Editor {
     }
 
     syncState({ selectedFile, fileContent }) {
-        if (!selectedFile || this.selectedFile === selectedFile) return
+        if (this.selectedFile === selectedFile) return
 
         // think about this later
         if (selectedFile) {
+            if (!this.selectedFile) this.dom.disabled = false;
             this.dom.value = fileContent
             this.dom.scrollTop = 0 // detail
             this.selectedFile = selectedFile
+        } else {
+            this.dom.value = 'no file selected'
+            this.dom.disabled = true
         }
+
         /*
         fetchOK(`/${selectedFile}`).then(
             async res => {
@@ -148,6 +181,7 @@ class Editor {
             }
         ).catch(console.log)
         */
+        this.selectedFile = selectedFile
     }
 }
 
@@ -167,19 +201,20 @@ class InfoPane {
 
 class Button {
 
-    syncState({selectedFile}){
+    syncState({ selectedFile }) {
         let active = selectedFile != undefined
-        if(this.active === active) return
+        if (this.active === active) return
 
-        if(!active) this.dom.disabled = true
-        else if(!this.active) this.dom.disabled = false
+        if (!active) this.dom.disabled = true
+        else if (!this.active) this.dom.disabled = false
 
         this.active = active
     }
 
 }
 
-class Delete extends Button{
+// think about this later
+class Delete extends Button {
     constructor(dispatch) {
         super()
         this.dom = elt(
@@ -194,7 +229,7 @@ class Delete extends Button{
     }
 }
 
-class Save extends Button{
+class Save extends Button {
     constructor(dispatch) {
         super()
         this.dom = elt(
@@ -208,6 +243,7 @@ class Save extends Button{
     }
 }
 
+// problems
 function renderNewFileButton(dispatch) {
     let dom = elt(
         'button',
@@ -218,7 +254,7 @@ function renderNewFileButton(dispatch) {
                 if (file_name) {
                     // decide what to do later
                     files[file_name] = ''
-                    dispatch({ selectedFile: file_name, fileContent: 'your text here' })
+                    dispatch({ /*type: 'newfile',*/ selectedFile: file_name, fileContent: 'your text here' })
                 } else
                     alert('invalid name')
 
@@ -278,7 +314,7 @@ async function pollDir(get_state, update_state) {
             update_state({ files: serverFiles, selectedFile: serverFiles[0] })
         } else {
             if (JSON.stringify(localFiles) != JSON.stringify(serverFiles))
-                update_state({ /*type:'update',*/ files: serverFiles })
+                update_state({ /*type: 'update',*/ files: serverFiles })
         }
     }, 500)
 }
@@ -303,7 +339,7 @@ function runApp() {
             }) // What if no file found?
         } else {
             if (JSON.stringify(localFiles) != JSON.stringify(serverFiles))
-                update({ /*type:'update',*/ files: serverFiles })
+                update({ type: 'update', files: serverFiles })
         }
     }, 500)
     document.body.appendChild(app.dom)
