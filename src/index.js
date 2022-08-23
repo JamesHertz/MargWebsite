@@ -1,41 +1,5 @@
-const files = {} /* {
-    banana: 'I am a fruit.\nAnd I have to live with it :(',
-    car: 'I am an engineer marvel.\nEveryone likes me and that leaves happy',
-    james: 'I wanna cry!\nI have been working on this project for weeks now',
-    crazyFile: 'Say something. I am a crazy file akkakakkakakakk',
-    anotherFile: 'turururururururrururr'
-}*/
-
-
 function assign(state, action) {
     return Object.assign({}, { ...state, ...action })
-}
-function fakeHandleAction(state, action) {
-
-    if (!action.type) return assign(state, action)
-    switch (action.type) {
-        case 'update': {
-            let { selectedFile, fileContent } = state
-            if (!action.files.some(f => f === selectedFile)) {
-                selectedFile = action.files[0]
-                fileContent = files[selectedFile]
-            }
-
-            return assign(state, { fileContent, selectedFile, files: action.files })
-        }
-        case 'delete':
-            delete files[state.selectedFile]
-            break;
-        case 'save': {
-            console.log('saving.')
-            let { selectedFile, fileContent } = state
-            files[selectedFile] = fileContent
-        }
-            break;
-    }
-
-
-    return state
 }
 
 function handleAction(state, action) {
