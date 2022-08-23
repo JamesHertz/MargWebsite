@@ -15,11 +15,16 @@ function fakeHandleAction(state, action) {
             let { selectedFile, fileContent } = state
             if (!action.files.some(f => f === selectedFile)) {
                 selectedFile = action.files[0]
-                fileContent = selectedFile ? files[selectedFile] : '' 
+                fileContent = files[selectedFile]
             }
 
             return Object.assign(state, { fileContent, selectedFile, files: action.files })
         }
+        case 'new':{
+            // do stuffs
+
+        }
+        break;
         case 'delete':
             delete files[state.selectedFile]
             break;
@@ -253,7 +258,7 @@ function renderNewFileButton(dispatch) {
                 if (file_name) {
                     // decide what to do later
                     files[file_name] = ''
-                    dispatch({ /*type: 'newfile',*/ selectedFile: file_name, fileContent: 'your text here' })
+                    dispatch({ type: 'new', selectedFile: file_name, fileContent: 'your text here' })
                 } else
                     alert('invalid name')
 
@@ -330,7 +335,7 @@ function runApp() {
         let localFiles = state.files
         let serverFiles = await getFiles()
         if (!localFiles) {
-            let selectedFile = serverFiles[0]
+            let selectedFile = serverFiles[0] || ''
             update({
                 files: serverFiles,
                 fileContent: files[selectedFile],
