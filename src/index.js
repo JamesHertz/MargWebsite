@@ -1,9 +1,9 @@
 const files = {
-    banana: 'I am a fruit',
-    car: 'I am an engineer marvel',
-    james: 'I wanna cry',
-    crazyFile: 'Say something',
-    anotherFile: 'turururu'
+    banana: 'I am a fruit.\nAnd I have to live with it :(',
+    car: 'I am an engineer marvel.\nEveryone likes me and that leaves happy',
+    james: 'I wanna cry!\nI have been working on this project for weeks now',
+    crazyFile: 'Say something. I am a crazy file akkakakkakakakk',
+    anotherFile: 'turururururururrururr'
 }
 
 
