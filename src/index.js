@@ -7,9 +7,12 @@ const files = {} /* {
 }*/
 
 
+function assign(state, action) {
+    return Object.assign({}, { ...state, ...action })
+}
 function fakeHandleAction(state, action) {
 
-    if (!action.type) return Object.assign(state, action)
+    if (!action.type) return assign(state, action)
     switch (action.type) {
         case 'update': {
             let { selectedFile, fileContent } = state
@@ -18,7 +21,7 @@ function fakeHandleAction(state, action) {
                 fileContent = files[selectedFile]
             }
 
-            return Object.assign(state, { fileContent, selectedFile, files: action.files })
+            return assign(state, { fileContent, selectedFile, files: action.files })
         }
         case 'delete':
             delete files[state.selectedFile]
@@ -36,17 +39,8 @@ function fakeHandleAction(state, action) {
 }
 
 function handleAction(state, action) {
-    if (!action.type) return Object.assign(state, action)
+    if (!action.type) return assign(state, action)
     switch (action.type) {
-        case 'new': {
-
-            let { filename } = action
-            fetchOK(`/${filename}`, { method: 'PUT' }).catch(console.log)
-            getFiles().then(files =>
-                dispatch({ files, selectedFile: filename, fileContent: 'your text here' })
-            )
-        }
-
         case 'delete':
             // where this thing should have been
             fetchOK(`/${state.selectedFile}`, { method: 'DELETE' })
@@ -88,7 +82,10 @@ function renderFile(file, dispatch, { selectedFile }) {
         {
             className: `file${(selectedFile == file ? ' selected' : '')}`,
             onclick: () => {
-                dispatch({ selectedFile: file, fileContent: files[file] })
+                getFile(file).then(
+                    fileContent =>
+                        dispatch({ selectedFile: file, fileContent: fileContent })
+                )
             }
         }, file
     )
@@ -253,8 +250,10 @@ function renderNewFileButton(dispatch) {
                 let filename = prompt('fileName: ', '')
                 if (filename) {
                     // decide what to do later
-                    dispatch({ action: 'new', filename })
-
+                    fetchOK(`/${filename}`, { method: 'PUT' }).catch(console.log)
+                    getFiles().then(files =>
+                        dispatch({ files, selectedFile: filename, fileContent: 'your text here' })
+                    )
                 } else
                     alert('invalid name')
 
@@ -317,7 +316,7 @@ async function getFile(filename) {
 function runApp() {
     let state = {}, app;
     function update(action) {
-        state = fakeHandleAction(state, action)
+        state = handleAction(state, action)
         app.syncState(state)
     }
     app = new MargApp(update)
@@ -338,9 +337,9 @@ function runApp() {
                 let { selectedFile } = state
                 let action = { files: serverFiles }
                 // if selected file disappeared do what is necessary
-                if (!serverFiles.files.some(f => f === selectedFile)) {
-                    action.selectedFile = action.files[0]
-                    action.fileContent = await getFile(selectedFile)
+                if (!serverFiles.some(f => f === selectedFile)) {
+                    action.selectedFile = serverFiles[0]
+                    action.fileContent = await getFile(serverFiles[0])
                 }
                 update(action)
             }
