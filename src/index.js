@@ -85,7 +85,6 @@ function renderFile(file, dispatch, { selectedFile }) {
 }
 
 
-
 class FilePane {
 
     // by now
@@ -153,6 +152,7 @@ class Editor {
 }
 
 
+
 class InfoPane {
     constructor() {
         this.dom = elt('em')
@@ -163,8 +163,25 @@ class InfoPane {
         this.dom.textContent = state.selectedFile
     }
 }
-class Delete {
+
+
+class Button {
+
+    syncState({selectedFile}){
+        let active = selectedFile != undefined
+        if(this.active === active) return
+
+        if(!active) this.dom.disabled = true
+        else if(!this.active) this.dom.disabled = false
+
+        this.active = active
+    }
+
+}
+
+class Delete extends Button{
     constructor(dispatch) {
+        super()
         this.dom = elt(
             'button',
             {
@@ -175,12 +192,11 @@ class Delete {
 
         )
     }
-    syncState() { }
-
 }
 
-class Save {
+class Save extends Button{
     constructor(dispatch) {
+        super()
         this.dom = elt(
             'button',
             {
@@ -190,8 +206,6 @@ class Save {
             'save'
         )
     }
-    syncState() { }
-
 }
 
 function renderNewFileButton(dispatch) {
@@ -215,6 +229,7 @@ function renderNewFileButton(dispatch) {
 
     return dom
 }
+
 class MargApp {
     constructor(dispatch) {
         let filePane = new FilePane(dispatch)
