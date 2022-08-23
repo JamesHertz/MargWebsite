@@ -38,12 +38,19 @@ function fakeHandleAction(state, action) {
 function handleAction(state, action) {
     if (!action.type) return Object.assign(state, action)
     switch (action.type) {
-        case 'delete': {
-            let { selectedFile, files } = state
-            files = files.filter(file => file != selectedFile)
-            fetchOK(`/${selectedFile}`, { method: 'DELETE' }).catch(console.log)
-            return Object.assign(state, { selectedFile: files[0], files })
+        case 'new': {
+
+            let { filename } = action
+            fetchOK(`/${filename}`, { method: 'PUT' }).catch(console.log)
+            getFiles().then(files =>
+                dispatch({ files, selectedFile: filename, fileContent: 'your text here' })
+            )
         }
+
+        case 'delete':
+            // where this thing should have been
+            fetchOK(`/${state.selectedFile}`, { method: 'DELETE' })
+            break;
         case 'save': {
             let { selectedFile, fileContent } = state
             fetchOK(`/${selectedFile}`, {
@@ -51,14 +58,9 @@ function handleAction(state, action) {
             }).catch(console.log)
         }
             break;
-        /*
-        case 'update':{
-            let {selectedFile} = state
-            if(!action.files.some(f => f== selectedFile))
-                selectedFile = action.files[0]
-            return Object.assign(state, {files: action.files, selectedFile}) 
-        }*/
     }
+
+
     return state
 }
 
@@ -248,13 +250,11 @@ function renderNewFileButton(dispatch) {
         {
             id: 'new-btn',// no need by now :)
             onclick: () => {
-                let file_name = prompt('fileName: ', '')
-                if (file_name) {
+                let filename = prompt('fileName: ', '')
+                if (filename) {
                     // decide what to do later
-                    files[file_name] = ''
-                    getFiles().then(files =>
-                        dispatch({ files, selectedFile: file_name, fileContent: 'your text here' })
-                    )
+                    dispatch({ action: 'new', filename })
+
                 } else
                     alert('invalid name')
 
@@ -295,29 +295,24 @@ class MargApp {
     }
 
     syncState(state) {
+        if (this.state === state) return;
         for (let c of this.components)
             c.syncState(state)
+        this.state = state
     }
 }
 
-async function getFiles() {
-    return Object.keys(files)
+// a generic one later
+async function getFiles(filename = '') {
+    let req = await fetchOK('/')
+    return (await req.text()).split('\n')
 }
 
-
-// change this later
-async function pollDir(get_state, update_state) {
-    setInterval(async () => {
-        let localFiles = get_state().files
-        let serverFiles = await getFiles()
-        if (!localFiles) {
-            update_state({ files: serverFiles, selectedFile: serverFiles[0] })
-        } else {
-            if (JSON.stringify(localFiles) != JSON.stringify(serverFiles))
-                update_state({ /*type: 'update',*/ files: serverFiles })
-        }
-    }, 500)
+async function getFile(filename) {
+    let req = await fetchOK(`/${filename}`)
+    return await req.text()
 }
+
 
 function runApp() {
     let state = {}, app;
@@ -334,12 +329,21 @@ function runApp() {
             let selectedFile = serverFiles[0] || ''
             update({
                 files: serverFiles,
-                fileContent: files[selectedFile],
+                fileContent: await getFile(selectedFile),
                 selectedFile
             }) // What if no file found?
         } else {
-            if (JSON.stringify(localFiles) != JSON.stringify(serverFiles))
-                update({ type: 'update', files: serverFiles })
+            // change this later
+            if (JSON.stringify(localFiles) != JSON.stringify(serverFiles)) {
+                let { selectedFile } = state
+                let action = { files: serverFiles }
+                // if selected file disappeared do what is necessary
+                if (!serverFiles.files.some(f => f === selectedFile)) {
+                    action.selectedFile = action.files[0]
+                    action.fileContent = await getFile(selectedFile)
+                }
+                update(action)
+            }
         }
     }, 500)
     document.body.appendChild(app.dom)
