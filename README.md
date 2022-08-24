@@ -4,10 +4,10 @@ It's the exercise proposed by the author of [Eloquente in JavaScript](https://el
 
 It's a simple website than anyone can vandalize (change the frontend source code as pleased). It uses a file server  called *filesever* :) developed in the [same charpter](https://eloquentjavascript.net/code/#20.3) of the book.
 
-After downloading the code you probably will need to install the *fileserver* nodejs modules by running:
+After downloading the code you probably will need to install the *fileserver* npm modules by running:
 
 ```bash  
-node i 
+npm i 
 ```
 
 on the fileserver directory.
